@@ -20,13 +20,11 @@ client host port = withSocketsDo $ do
                 addrInfo <- getAddrInfo Nothing (Just host) (Just $ show port)
                 let serverAddr = head addrInfo
                 sock <- socket (addrFamily serverAddr) Stream defaultProtocol
-                connect sock (addrAddress serverAddr)
-                msgSender sock
-                sClose sock
-                client host port
+                msgSender sock serverAddr
 
-msgSender :: Socket -> IO ()
-msgSender sock = do
+--msgSender :: Socket -> IO ()
+msgSender sock  addr = do
+  connect sock (addrAddress addr)
   putStrLn "Enter text:"
   input <- getLine
   let msg = "GET /index.php?message=" ++ input ++ " HTTP/1.1\r\nHost: localhost:8002\r\n\r\n"
@@ -34,4 +32,8 @@ msgSender sock = do
   send sock msg
   rMsg <- recv sock 4096
   B8.putStrLn rMsg
-  --if msg == B8.pack "q" then putStrLn "Disconnected!" else msgSender sock
+  if input == "q" then do
+    sClose sock
+    putStrLn "Disconnected!" 
+    else 
+      msgSender sock addr
