@@ -5,9 +5,6 @@ import qualified Data.ByteString.Char8 as B8
 import Data.Char
 import Data.String.Utils
 
-client' :: Int -> IO ()
-client' = client "localhost"
-
 main = do
   putStrLn "Enter host:"
   host <- getLine
@@ -48,24 +45,3 @@ getRequest addr input = do
 
 subStrRepl :: String -> String -> String -> String
 subStrRepl str find repl = join repl (split find str)
-
-
-
-
-
-{-
-msgSender :: Socket -> IO ()
-msgSender sock = do
-  putStrLn "Enter text:"
-  input <- getLine
-  let msg = "GET /index.php?message=" ++ input ++ " HTTP/1.1\r\nHost: localhost:8002\r\n\r\n"
-  putStrLn msg
-  send sock msg
-  rMsg <- recv sock 4096
-  B8.putStrLn rMsg
-  if input == "q" then do
-    putStrLn "Disconnected!" 
-    else 
-      msgSender sock
--}
-
