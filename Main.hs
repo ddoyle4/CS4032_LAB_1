@@ -1,8 +1,9 @@
 module Main where
-import Network.Socket hiding (sendTo, recv, recvFrom)
-import Network.Socket.ByteString (recv)
+import Network.Socket hiding (send, sendTo, recv, recvFrom)
+import Network.Socket.ByteString (send, recv)
 import qualified Data.ByteString.Char8 as B8
 import Data.Char
+import Data.String.Utils
 
 client' :: Int -> IO ()
 client' = client "localhost"
@@ -17,14 +18,44 @@ main = do
 
 client :: String -> Int -> IO ()
 client host port = withSocketsDo $ do
-                addrInfo <- getAddrInfo Nothing (Just host) (Just $ show port)
-                let serverAddr = head addrInfo
-                sock <- socket (addrFamily serverAddr) Stream defaultProtocol
-                msgSender sock serverAddr
+  addrInfo <- getAddrInfo Nothing (Just host) (Just $ show port)
+  let serverAddr = head addrInfo
+  session serverAddr
+  putStrLn "finished"
 
---msgSender :: Socket -> IO ()
-msgSender sock  addr = do
+session sa = do
+  putStrLn "Enter text:"
+  input <- getLine
+  putStrLn input
+  case input of
+    "q" -> do 
+      putStrLn "disconnected"
+    _ -> do 
+    putStrLn input
+    getRequest sa (B8.pack (subStrRepl input " " "%20"))
+    session sa
+
+getRequest addr input = do
+  sock <- socket (addrFamily addr) Stream defaultProtocol
+  let startGetRequest = B8.pack "GET /index.php?message="
+  let endGetRequest = B8.pack " HTTP/1.1\r\nHost: localhost:8002\r\n\r\n"
+  let getRequest = B8.append startGetRequest (B8.append input endGetRequest)
   connect sock (addrAddress addr)
+  send sock getRequest
+  rMsg <- recv sock 8000
+  B8.putStrLn rMsg
+  sClose sock
+
+subStrRepl :: String -> String -> String -> String
+subStrRepl str find repl = join repl (split find str)
+
+
+
+
+
+{-
+msgSender :: Socket -> IO ()
+msgSender sock = do
   putStrLn "Enter text:"
   input <- getLine
   let msg = "GET /index.php?message=" ++ input ++ " HTTP/1.1\r\nHost: localhost:8002\r\n\r\n"
@@ -33,7 +64,8 @@ msgSender sock  addr = do
   rMsg <- recv sock 4096
   B8.putStrLn rMsg
   if input == "q" then do
-    sClose sock
     putStrLn "Disconnected!" 
     else 
-      msgSender sock addr
+      msgSender sock
+-}
+
