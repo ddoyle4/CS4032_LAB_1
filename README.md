@@ -5,6 +5,8 @@ Author: David Doyle
 ### Compiling
 Compile with `ghc -o client Main.hs`
 
+May require `cabal install MissinH` first.
+
 ### Running
 Run with `./client`
 
